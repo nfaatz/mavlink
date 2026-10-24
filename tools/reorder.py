@@ -8,7 +8,7 @@ SIZES = {
 }
 
 def base_type(t):
-    if t == "uint8_t_mavlink_version":   # Sondertyp → normaler Typ
+    if t == "uint8_t_mavlink_version":
         return "uint8_t"
     return t
 
@@ -20,20 +20,22 @@ def crc_accumulate(crc, data):
     return crc
 
 def crc_extra(msg_name, ordered):
-    crc = 0xFFFF                                       # Startwert
-    crc = crc_accumulate(crc, (msg_name + " ").encode())
+    crc = crc_accumulate(0xFFFF, (msg_name + " ").encode())
     for typ, field_name in ordered:
         crc = crc_accumulate(crc, (typ + " ").encode())
         crc = crc_accumulate(crc, (field_name + " ").encode())
-    return (crc & 0xFF) ^ (crc >> 8)                   # 16 Bit → 8 Bit falten
+    return (crc & 0xFF) ^ (crc >> 8)
 
-root = ET.parse("test/mini.xml").getroot()
+def load_messages(path):
+    """Liefert {Nachrichtenname: Felder in Übertragungsreihenfolge}."""
+    root = ET.parse(path).getroot()
+    messages = {}
+    for msg in root.iter("message"):
+        fields = [(base_type(el.get("type")), el.get("name"))
+                  for el in msg.findall("field")]
+        messages[msg.get("name")] = sorted(fields, key=lambda tn: -SIZES[tn[0]])
+    return messages
 
-for msg in root.iter("message"):
-    fields = [(base_type(f.get("type")), f.get("name"))
-              for f in msg.findall("field")]
-    ordered = sorted(fields, key=lambda tn: -SIZES[tn[0]])
-    print(msg.get("name"))
-    print("  Definition: ", [n for t, n in fields])
-    print("  Uebertragung:", [n for t, n in ordered])
-    print("  crc_extra:  ", crc_extra(msg.get("name"), ordered))
+if __name__ == "__main__":
+    for name, ordered in load_messages("test/mini.xml").items():
+        print(name, [n for t, n in ordered], crc_extra(name, ordered))
