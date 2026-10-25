@@ -36,6 +36,7 @@ def enum_packages():
 
 @pytest.fixture(scope="session")
 def model_packages():
-    """Messages and enums together, as the message generator needs both."""
+    """All models together: messages, enums and own quantity types."""
     return parse_files([MODELS / "MavlinkMini.sysml",
+                        MODELS / "CommonQuantities.sysml",
                         MODELS / "generated" / "MavlinkEnums.sysml"])
