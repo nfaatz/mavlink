@@ -7,27 +7,37 @@ package MavlinkMini {
 
     item def HEARTBEAT {
         doc
-        /* The heartbeat message shows that a system or component
-         * is present and responding.
-         */
+        /* The heartbeat message shows that a system or component is present and responding. The type and autopilot fields (along with the message component id), allow the receiving system to treat further messages from this system appropriately (e.g. by laying out the user interface based on the autopilot). This microservice is documented at https://mavlink.io/en/services/heartbeat.html */
         @MavlinkMessage { id = 0; }
 
         attribute type : MAV_TYPE {
+            doc
+            /* Vehicle or component type. For a flight controller component the vehicle type (quadrotor, helicopter, etc.). For other components the component type (e.g. camera, gimbal, etc.). This should be used in preference to component id for identifying the component type. */
             @MavlinkField { wireType = WireType::uint8_t; }
         }
         attribute autopilot : MAV_AUTOPILOT {
+            doc
+            /* Autopilot type / class. Use MAV_AUTOPILOT_INVALID for components that are not flight controllers. */
             @MavlinkField { wireType = WireType::uint8_t; }
         }
         attribute base_mode : MAV_MODE_FLAG [0..*] {
+            doc
+            /* System mode bitmap. */
             @MavlinkField { wireType = WireType::uint8_t; }
         }
         attribute custom_mode : Natural {
+            doc
+            /* A bitfield for use for autopilot-specific flags */
             @MavlinkField { wireType = WireType::uint32_t; }
         }
         attribute system_status : MAV_STATE {
+            doc
+            /* System status flag. */
             @MavlinkField { wireType = WireType::uint8_t; }
         }
         attribute mavlink_version : Natural {
+            doc
+            /* MAVLink version, not writable by user, gets added by protocol because of magic data type: uint8_t_mavlink_version */
             @MavlinkField { wireType = WireType::uint8_t; autoVersion = true; }
         }
     }
