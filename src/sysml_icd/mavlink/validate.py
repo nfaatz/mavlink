@@ -8,6 +8,7 @@ from sysml_icd.findings import ERROR, WARNING, Finding
 from sysml_icd.mavlink.sysml_to_xml import find_message_defs, short_name
 
 # Physical quantity kind of each MAVLink unit string.
+# TECH-DEBT: hand-maintained subset; derive from the ISQ/SI library later
 UNIT_KINDS = {
     "us": "duration", "ms": "duration", "s": "duration",
     "rad": "angle", "deg": "angle", "cdeg": "angle", "degE7": "angle",

@@ -5,6 +5,7 @@ First target: MAVLink. The SysML model must produce the same wire format as the 
 MAVLink XML (verified via CRC_EXTRA).
 
 ## Setup
+
 ```
 python -m venv .venv
 .venv\Scripts\activate          # Linux/macOS: source .venv/bin/activate
@@ -13,12 +14,17 @@ git submodule update --init
 ```
 
 ## Run
+
 ```
 python -m pytest -v                     # all tests
 python scripts/generate_enums.py        # regenerate models/generated/ from fixtures/mini.xml
+python -m validate_models.py
+python -m diff_models.py
+python -m generate_xml.py
 ```
 
 ## Layout
+
 ```
 src/sysml_icd/sysml/     SysML parser (protocol-agnostic)
 src/sysml_icd/mavlink/   MAVLink rules: wire order, CRC, XML import/export, SysML extraction
@@ -32,5 +38,6 @@ reference/mavlink/       official MAVLink repo (git submodule, read-only)
 ```
 
 ## References
+
 - MAVLink definitions: https://github.com/mavlink/mavlink/tree/master/message_definitions/v1.0
 - Serialization and CRC_EXTRA: https://mavlink.io/en/guide/serialization.html

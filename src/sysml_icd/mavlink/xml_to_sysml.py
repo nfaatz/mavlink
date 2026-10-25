@@ -8,6 +8,7 @@ def doc_block(text, indent):
     """Format a description as a SysML doc comment (list of lines)."""
     if not text:
         return []
+    # TECH-DEBT: lossy, "*/" becomes "* /" and breaks the round trip
     text = text.replace("*/", "* /")              # would otherwise end the comment
     lines = [" ".join(l.split()) for l in text.strip().splitlines()]
     lines = [l for l in lines if l]               # drop empty lines

@@ -15,7 +15,7 @@ def base_type(xml_type):
         return "uint8_t"
     return xml_type
 
-
+# TECH-DEBT: extension fields are not supported (must keep XML order, excluded from CRC)
 def wire_order(fields):
     """Sort (type, name) pairs into MAVLink wire order.
 
