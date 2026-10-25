@@ -36,28 +36,36 @@ def test_identical_models_have_no_changes():
     assert verdict([]) == INFO
 
 
+# pytest.param(..., id=...) gives each case a short name. Without it pytest
+# builds the test id from the parameter values, i.e. from the whole model text.
 @pytest.mark.parametrize("mini, enums, expected", [
-    # units ms -> s: CRC unchanged, values off by factor 1000
-    (edit(MINI, 'uint32_t; units = "ms"; }\n        }\n        attribute roll',
-                'uint32_t; units = "s"; }\n        }\n        attribute roll'), ENUMS,
-     {(BREAKING_SILENT, "ATTITUDE.time_boot_ms")}),
-    # wire type change: CRC changes, MAVLink drops packets
-    (edit(MINI, "WireType::uint16_t", "WireType::int16_t"), ENUMS,
-     {(BREAKING_LOUD, "GLOBAL_POSITION_INT"), (BREAKING_LOUD, "GLOBAL_POSITION_INT.hdg")}),
-    # documentation only
-    (edit(MINI, "/* Roll angle (-pi..+pi) */", "/* Roll angle in radians */"), ENUMS,
-     {(INFO, "ATTITUDE.roll")}),
-    # new message
-    (edit(MINI, "} // package MavlinkMini", NEW_MESSAGE), ENUMS,
-     {(COMPATIBLE, "NEW_MSG")}),
-    # new enum entry
-    (MINI, edit(ENUMS, "        enum MAV_STATE_UNINIT {",
-                "        enum MAV_STATE_NEW { @MavlinkEnumValue { value = 99; } }\n"
-                "        enum MAV_STATE_UNINIT {"),
-     {(CONDITIONAL, "MAV_STATE.MAV_STATE_NEW")}),
-    # enum value changed
-    (MINI, edit(ENUMS, "value = 128;", "value = 64;"),
-     {(BREAKING_SILENT, "MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED")}),
+    pytest.param(
+        edit(MINI, 'uint32_t; units = "ms"; }\n        }\n        attribute roll',
+                   'uint32_t; units = "s"; }\n        }\n        attribute roll'), ENUMS,
+        {(BREAKING_SILENT, "ATTITUDE.time_boot_ms")},
+        id="units-ms-to-s"),
+    pytest.param(
+        edit(MINI, "WireType::uint16_t", "WireType::int16_t"), ENUMS,
+        {(BREAKING_LOUD, "GLOBAL_POSITION_INT"), (BREAKING_LOUD, "GLOBAL_POSITION_INT.hdg")},
+        id="wire-type-changed"),
+    pytest.param(
+        edit(MINI, "/* Roll angle (-pi..+pi) */", "/* Roll angle in radians */"), ENUMS,
+        {(INFO, "ATTITUDE.roll")},
+        id="description-changed"),
+    pytest.param(
+        edit(MINI, "} // package MavlinkMini", NEW_MESSAGE), ENUMS,
+        {(COMPATIBLE, "NEW_MSG")},
+        id="message-added"),
+    pytest.param(
+        MINI, edit(ENUMS, "        enum MAV_STATE_UNINIT {",
+                   "        enum MAV_STATE_NEW { @MavlinkEnumValue { value = 99; } }\n"
+                   "        enum MAV_STATE_UNINIT {"),
+        {(CONDITIONAL, "MAV_STATE.MAV_STATE_NEW")},
+        id="enum-entry-added"),
+    pytest.param(
+        MINI, edit(ENUMS, "value = 128;", "value = 64;"),
+        {(BREAKING_SILENT, "MAV_MODE_FLAG.MAV_MODE_FLAG_SAFETY_ARMED")},
+        id="enum-value-changed"),
 ])
 def test_change_classification(mini, enums, expected):
     assert summary(compare(model(), model(mini, enums))) == expected
