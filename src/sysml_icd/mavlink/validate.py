@@ -101,7 +101,29 @@ def check_units(packages):
     return findings
 
 
-RULES = [check_units]
+# MAVLink convention: a name suffix states the unit (time_boot_ms, time_usec).
+NAME_SUFFIX_UNITS = {"ms": "ms", "us": "us", "usec": "us"}
+
+
+def check_name_unit_suffix(packages):
+    """Heuristic: a unit suffix in the field name must match the declared unit."""
+    findings = []
+    for location, attr, values in iter_fields(packages):
+        if "_" not in attr.name:
+            continue
+        suffix = attr.name.rsplit("_", 1)[-1]          # "time_boot_ms" -> "ms"
+        expected = NAME_SUFFIX_UNITS.get(suffix)
+        if expected is None:
+            continue
+        unit = values.get("units")
+        if unit != expected:
+            findings.append(Finding("NAME-UNIT-SUFFIX", WARNING, location,
+                                    f"name suffix '_{suffix}' suggests unit '{expected}', "
+                                    f"but unit is {unit!r}"))
+    return findings
+
+
+RULES = [check_units, check_name_unit_suffix]
 
 
 def validate(packages):

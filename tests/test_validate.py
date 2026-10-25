@@ -1,11 +1,12 @@
 import pytest
 
 from sysml_icd.findings import ERROR, WARNING
-from sysml_icd.mavlink.validate import check_units, quantity_kind, validate
+from sysml_icd.mavlink.validate import (check_name_unit_suffix, check_units,
+                                         quantity_kind, validate)
 from sysml_icd.sysml.parser import parse_text
 
 
-def model_with_field(type_name, units=None):
+def model_with_field(type_name, units=None, name="f"):
     """Build a minimal model with one message and one field."""
     unit_part = f' units = "{units}";' if units else ""
     return parse_text(f"""
@@ -14,7 +15,7 @@ def model_with_field(type_name, units=None):
             enum def MyEnum {{ enum A; }}
             item def MSG {{
                 @MavlinkMessage {{ id = 1; }}
-                attribute f : {type_name} {{
+                attribute {name} : {type_name} {{
                     @MavlinkField {{ wireType = WireType::float;{unit_part} }}
                 }}
             }}
@@ -53,3 +54,18 @@ def test_quantity_kind_follows_specialization_chain():
 
 def test_quantity_kind_survives_cycles():
     assert quantity_kind("A", {"A": "B", "B": "A"}) is None
+
+
+@pytest.mark.parametrize("name, units, flagged", [
+    ("time_boot_ms", "ms",  False),
+    ("time_usec",    "us",  False),
+    ("roll",         "rad", False),     # no unit suffix
+    ("num_items",    None,  False),     # suffix is not a unit
+    ("time_boot_ms", "s",   True),
+    ("time_usec",    "ms",  True),
+    ("time_boot_ms", None,  True),
+])
+def test_check_name_unit_suffix(name, units, flagged):
+    findings = check_name_unit_suffix(model_with_field("DurationValue", units, name))
+    expected = [("NAME-UNIT-SUFFIX", WARNING, f"MSG.{name}")] if flagged else []
+    assert [(f.rule, f.severity, f.location) for f in findings] == expected
