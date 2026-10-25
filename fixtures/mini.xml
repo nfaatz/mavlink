@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Excerpt from mavlink/message_definitions/v1.0/minimal.xml and common.xml,
+        MAVLink commit eec8824212c1fe8c5d8f5181fcfdef54ee219b63 -->
 <mavlink>
     <version>3</version>
     <dialect>0</dialect>
@@ -227,7 +229,7 @@
             </entry>
         </enum>
         <enum name="MAV_MODE_FLAG" bitmask="true">
-      <description>These flags encode the MAV mode, see MAV_MODE enum for useful combinations.</description>
+            <description>These flags encode the MAV mode, see MAV_MODE enum for useful combinations.</description>
       <entry value="128" name="MAV_MODE_FLAG_SAFETY_ARMED">
         <description>0b10000000 MAV safety set to armed. Motors are enabled / running / can start. Ready to fly. Additional note: this flag is to be ignored when sent in the command MAV_CMD_DO_SET_MODE and MAV_CMD_COMPONENT_ARM_DISARM shall be used instead. The flag can still be used to report the armed state.</description>
       </entry>

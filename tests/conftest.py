@@ -1,11 +1,13 @@
 """Shared paths and fixtures; pytest loads this file automatically."""
 
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
 
 from sysml_icd.mavlink.sysml_import import load_messages_sysml
 from sysml_icd.mavlink.xml_import import load_messages
+from sysml_icd.sysml.parser import parse_files
 
 ROOT = Path(__file__).resolve().parent.parent
 MINI_XML = ROOT / "fixtures" / "mini.xml"
@@ -20,3 +22,20 @@ def xml_messages():
 @pytest.fixture(scope="session")
 def sysml_messages():
     return load_messages_sysml([MODELS / "MavlinkMini.sysml"])
+
+
+@pytest.fixture(scope="session")
+def mini_xml_root():
+    return ET.parse(MINI_XML).getroot()
+
+
+@pytest.fixture(scope="session")
+def enum_packages():
+    return parse_files([MODELS / "generated" / "MavlinkEnums.sysml"])
+
+
+@pytest.fixture(scope="session")
+def model_packages():
+    """Messages and enums together, as the message generator needs both."""
+    return parse_files([MODELS / "MavlinkMini.sysml",
+                        MODELS / "generated" / "MavlinkEnums.sysml"])
