@@ -7,6 +7,7 @@ TECH-DEBT: This is NOT a full SysML v2 parser. It supports only:
 Anything else raises ParseError. Replace with an official parser
 (e.g. Pilot Implementation JSON export) once the subset grows.
 See docs/adr/0001-own-subset-parser.md.
+This module is protocol-agnostic: it knows SysML, not MAVLink.
 """
 
 import re
@@ -238,35 +239,3 @@ def parse_files(paths):
         with open(path, encoding="utf-8") as f:
             packages += parse_text(f.read())
     return packages
-
-
-# ---------------------------------------------------------------------------
-# Extraction: SysML model -> same structure as reorder.load_messages()
-# ---------------------------------------------------------------------------
-
-def load_messages_sysml(paths):
-    """Return {message name: [(wire type, field name), ...] in wire order}."""
-    from tools.reorder import SIZES
-
-    messages = {}
-    for pkg in parse_files(paths):
-        for el in pkg.children:
-            if el.kind != "item def" or el.get_metadata("MavlinkMessage") is None:
-                continue
-            fields = []
-            for attr in el.children:
-                md = attr.get_metadata("MavlinkField")
-                if md is None:
-                    raise ParseError(f"{el.name}.{attr.name}: missing @MavlinkField")
-                wire_type = md.values["wireType"].split("::")[-1]
-                fields.append((wire_type, attr.name))
-            messages[el.name] = sorted(fields, key=lambda tn: -SIZES[tn[0]])
-    return messages
-
-
-if __name__ == "__main__":
-    from tools.reorder import crc_extra
-
-    msgs = load_messages_sysml(["models/MavlinkMini.sysml"])
-    for name, ordered in msgs.items():
-        print(name, [n for t, n in ordered], crc_extra(name, ordered))

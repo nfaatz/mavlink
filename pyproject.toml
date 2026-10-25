@@ -1,2 +1,19 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sysml-icd"
+version = "0.1.0"
+description = "Generate interface control documents and protocol definitions from SysML v2 models"
+requires-python = ">=3.10"
+dependencies = []                 # product code needs only the standard library
+
+[project.optional-dependencies]
+dev = ["pymavlink==2.4.50", "lxml", "pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

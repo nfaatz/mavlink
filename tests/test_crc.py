@@ -1,16 +1,14 @@
 import pytest
-from tools.reorder import load_messages, crc_extra
 
-EXPECTED = {"HEARTBEAT": 50, "ATTITUDE": 39, "GLOBAL_POSITION_INT": 104}
+from reference_values import EXPECTED_CRC
+from sysml_icd.mavlink.crc import crc_extra
 
-@pytest.fixture
-def messages():
-    return load_messages("test/mini.xml")
 
-@pytest.mark.parametrize("name, expected", EXPECTED.items())
-def test_crc_extra(messages, name, expected):
-    assert crc_extra(name, messages[name]) == expected
+@pytest.mark.parametrize("name, expected", EXPECTED_CRC.items())
+def test_crc_extra_from_xml(xml_messages, name, expected):
+    assert crc_extra(name, xml_messages[name]) == expected
 
-def test_heartbeat_reordering(messages):
-    names = [n for t, n in messages["HEARTBEAT"]]
+
+def test_heartbeat_reordering(xml_messages):
+    names = [n for t, n in xml_messages["HEARTBEAT"]]
     assert names[0] == "custom_mode"

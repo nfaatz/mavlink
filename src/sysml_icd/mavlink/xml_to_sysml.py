@@ -1,18 +1,23 @@
+"""Generate SysML v2 text from MAVLink XML definitions."""
+
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 
 def doc_block(text, indent):
-    """Formatiert eine Beschreibung als SysML-doc-Kommentar (Liste von Zeilen)."""
+    """Format a description as a SysML doc comment (list of lines)."""
     if not text:
         return []
-    text = text.replace("*/", "* /")              # würde den Kommentar sonst beenden
+    text = text.replace("*/", "* /")              # would otherwise end the comment
     lines = [" ".join(l.split()) for l in text.strip().splitlines()]
-    lines = [l for l in lines if l]               # Leerzeilen entfernen
+    lines = [l for l in lines if l]               # drop empty lines
     if not lines:
         return []
     pad = " " * indent
+    # "doc" on its own line matches the formatter style of the editor,
+    # so regenerating does not produce spurious diffs.
     if len(lines) == 1:
-        return [f"{pad}doc /* {lines[0]} */"]
+        return [f"{pad}doc", f"{pad}/* {lines[0]} */"]
     out = [f"{pad}doc", f"{pad}/* {lines[0]}"]
     out += [f"{pad} * {l}" for l in lines[1:]]
     out.append(f"{pad} */")
@@ -21,7 +26,7 @@ def doc_block(text, indent):
 
 def gen_enums(xml_path):
     root = ET.parse(xml_path).getroot()
-    out = [f"// GENERIERT aus {xml_path} – nicht von Hand ändern",
+    out = [f"// GENERATED from {Path(xml_path).name} - do not edit by hand",
            "package MavlinkEnums {",
            "    private import MavlinkProfile::*;",
            ""]
@@ -35,7 +40,7 @@ def gen_enums(xml_path):
         else:
             out.append("        @MavlinkEnum;")
 
-        next_value = 0                            # für Einträge ohne value
+        next_value = 0                            # for entries without a value
         for entry in enum.findall("entry"):
             raw = entry.get("value")
             value = int(raw, 0) if raw is not None else next_value
@@ -49,10 +54,7 @@ def gen_enums(xml_path):
         out.append("    }")
         out.append("")
 
-    out.append("}")
+    if out[-1] == "":
+        out.pop()                                 # no blank line before closing brace
+    out.append("} // package MavlinkEnums")
     return "\n".join(out) + "\n"
-
-
-if __name__ == "__main__":
-    with open("models/MavlinkEnums.sysml", "w", encoding="utf-8") as f:
-        f.write(gen_enums("test/mini.xml"))
